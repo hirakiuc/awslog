@@ -1,4 +1,4 @@
-package aws
+package awslogs
 
 import (
 	"github.com/aws/aws-sdk-go/aws"

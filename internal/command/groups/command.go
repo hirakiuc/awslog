@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/hirakiuc/awslog/internal/aws"
+	"github.com/hirakiuc/awslog/internal/awslogs"
 	"github.com/hirakiuc/awslog/internal/options"
 )
 
@@ -30,8 +30,8 @@ func init() {
 	}
 }
 
-func (c *Command) requestParams() aws.LogGroupsParams {
-	params := aws.NewLogGroupsParams()
+func (c *Command) requestParams() awslogs.LogGroupsParams {
+	params := awslogs.NewLogGroupsParams()
 
 	params.Limit = 30
 
@@ -44,7 +44,7 @@ func (c *Command) requestParams() aws.LogGroupsParams {
 
 // Execute fetch and show each LogGroup names.
 func (c *Command) Execute(args []string) error {
-	service := aws.NewAwsLogs()
+	service := awslogs.NewAwsLogs()
 
 	err := service.LogGroups(c.requestParams(), func(group *cloudwatchlogs.LogGroup, lastEntry bool) bool {
 		fmt.Println(*group.LogGroupName)
