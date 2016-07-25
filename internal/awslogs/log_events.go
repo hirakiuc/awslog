@@ -19,13 +19,13 @@ type LogEventsParams struct {
 
 func NewLogEventsParams() LogEventsParams {
 	now := time.Now()
-	startTime := now.Unix() * 1000
-	endTime := now.AddDate(0, 0, -2).Unix() * 1000
+	startTime := now.AddDate(0, 0, -10).Unix() * 1000
+	endTime := now.Unix() * 1000
 
 	return LogEventsParams{
 		Limit:         1000,
-		EndTime:       startTime,
-		StartTime:     endTime,
+		EndTime:       endTime,
+		StartTime:     startTime,
 		LogGroupName:  "",
 		LogStreamName: "",
 		StartFromHead: false,
@@ -50,7 +50,7 @@ func (logs *AwsLogs) LogEvents(params LogEventsParams, fn func(logEvent *cloudwa
 		params.convert(),
 		func(output *cloudwatchlogs.GetLogEventsOutput, lastPage bool) bool {
 			fmt.Println("last?", lastPage, ", size:", len(output.Events))
-			if lastPage && len(output.Events) == 0 {
+			if len(output.Events) == 0 {
 				return false
 			}
 
