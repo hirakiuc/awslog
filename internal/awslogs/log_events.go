@@ -1,7 +1,6 @@
 package awslogs
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -19,16 +18,16 @@ type LogEventsParams struct {
 
 func NewLogEventsParams() LogEventsParams {
 	now := time.Now()
-	startTime := now.AddDate(0, 0, -10).Unix() * 1000
+	startTime := now.AddDate(0, -1, 0).Unix() * 1000
 	endTime := now.Unix() * 1000
 
 	return LogEventsParams{
-		Limit:         1000,
 		EndTime:       endTime,
 		StartTime:     startTime,
+		Limit:         0,
 		LogGroupName:  "",
 		LogStreamName: "",
-		StartFromHead: false,
+		StartFromHead: true,
 	}
 }
 
@@ -36,7 +35,6 @@ func (params LogEventsParams) convert() *cloudwatchlogs.GetLogEventsInput {
 	ret := &cloudwatchlogs.GetLogEventsInput{
 		StartTime:     aws.Int64(params.StartTime),
 		EndTime:       aws.Int64(params.EndTime),
-		Limit:         aws.Int64(params.Limit),
 		LogGroupName:  aws.String(params.LogGroupName),
 		LogStreamName: aws.String(params.LogStreamName),
 		StartFromHead: aws.Bool(params.StartFromHead),
@@ -49,7 +47,6 @@ func (logs *AwsLogs) LogEvents(params LogEventsParams, fn func(logEvent *cloudwa
 	return logs.service.GetLogEventsPages(
 		params.convert(),
 		func(output *cloudwatchlogs.GetLogEventsOutput, lastPage bool) bool {
-			fmt.Println("last?", lastPage, ", size:", len(output.Events))
 			if len(output.Events) == 0 {
 				return false
 			}
@@ -61,6 +58,10 @@ func (logs *AwsLogs) LogEvents(params LogEventsParams, fn func(logEvent *cloudwa
 					return false
 				}
 			}
+
+			// Wait to avoid exhausting api call.
+			time.Sleep(100 * time.Millisecond)
+
 			return true
 		})
 }
