@@ -11,8 +11,11 @@ import (
 )
 
 type Command struct {
-	LogGroupName        string `short:"g" long:"loggroup" description:"target LogGroup Name" required:"true"`
 	LogStreamNamePrefix string `short:"p" long:"prefix" description:"LogStream name prefix" default:""`
+
+	Args struct {
+		LogGroupName string `positional-arg-name:"GroupName" description:"target LogGroup Name"`
+	} `positional-args:"yes" required:"yes"`
 }
 
 var command Command
@@ -34,7 +37,7 @@ func init() {
 func (c *Command) requestParams() awslogs.LogStreamsParams {
 	params := awslogs.NewLogStreamsParams()
 
-	params.LogGroupName = c.LogGroupName
+	params.LogGroupName = c.Args.LogGroupName
 	if len(c.LogStreamNamePrefix) > 0 {
 		params.LogStreamNamePrefix = c.LogStreamNamePrefix
 	}
@@ -43,8 +46,8 @@ func (c *Command) requestParams() awslogs.LogStreamsParams {
 }
 
 func (c *Command) validate(args []string) error {
-	if len(c.LogGroupName) == 0 {
-		return errors.New("Require LogGroupName option.")
+	if len(c.Args.LogGroupName) == 0 {
+		return errors.New("Require LogGroupName.")
 	}
 
 	return nil

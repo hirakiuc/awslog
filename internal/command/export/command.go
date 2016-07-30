@@ -13,10 +13,13 @@ import (
 )
 
 type Command struct {
-	LogGroupName  string `short:"g" long:"group" description:"LogGroup name" required:"true"`
-	LogStreamName string `short:"s" long:"stream" description:"LogStream name" required:"true"`
-	From          string `short:"f" long:"from" description:"export log events from"`
-	To            string `short:"t" long:"to" description:"export log events to"`
+	StartTime string `short:"s" long:"start" description:"start time to export log events"`
+	EndTime   string `short:"e" long:"end"   description:"end time to export log events"`
+
+	Args struct {
+		LogGroupName  string `positional-arg-name:"GroupName"  description:"target LogGroup Name"`
+		LogStreamName string `positional-arg-name:"StreamName" description:"target LogStream Name"`
+	} `positional-args:"yes" required:"yes"`
 }
 
 var command Command
@@ -40,8 +43,8 @@ func (c *Command) requestParams() awslogs.LogEventsParams {
 
 	params.Limit = 1000
 
-	params.LogGroupName = c.LogGroupName
-	params.LogStreamName = c.LogStreamName
+	params.LogGroupName = c.Args.LogGroupName
+	params.LogStreamName = c.Args.LogStreamName
 
 	return params
 }
@@ -49,10 +52,10 @@ func (c *Command) requestParams() awslogs.LogEventsParams {
 func (c *Command) Execute(args []string) error {
 	service := awslogs.NewAwsLogs()
 
-	if len(c.From) > 0 || len(c.To) > 0 {
+	if len(c.StartTime) > 0 || len(c.EndTime) > 0 {
 		timeParser := parser.NewTimeTextParser(time.Now())
-		timeParser.Parse(c.From)
-		timeParser.Parse(c.To)
+		timeParser.Parse(c.StartTime)
+		timeParser.Parse(c.EndTime)
 		return errors.New("finish")
 	}
 
