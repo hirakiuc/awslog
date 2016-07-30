@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	_ "github.com/hirakiuc/awslog/internal/command/export"
 	_ "github.com/hirakiuc/awslog/internal/command/groups"
 	_ "github.com/hirakiuc/awslog/internal/command/streams"
 	"github.com/hirakiuc/awslog/internal/options"

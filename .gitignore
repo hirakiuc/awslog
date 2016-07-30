@@ -41,5 +41,6 @@ Session.vim
 .netrwhist
 *~
 
-/awslog
-/.envrc
+awslog
+.envrc
+log/*
