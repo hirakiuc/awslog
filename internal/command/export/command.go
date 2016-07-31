@@ -1,7 +1,6 @@
 package export
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -13,8 +12,8 @@ import (
 )
 
 type Command struct {
-	StartTime string `short:"s" long:"start" description:"start time to export log events"`
-	EndTime   string `short:"e" long:"end"   description:"end time to export log events"`
+	StartTime string `short:"s" long:"start" default:"now" description:"start time to export log events."`
+	EndTime   string `short:"e" long:"end"   default:"now" description:"end time to export log events."`
 
 	Args struct {
 		LogGroupName  string `positional-arg-name:"GroupName"  description:"target LogGroup Name"`
@@ -38,28 +37,39 @@ func init() {
 	}
 }
 
-func (c *Command) requestParams() awslogs.LogEventsParams {
+func (c *Command) requestParams() (awslogs.LogEventsParams, error) {
 	params := awslogs.NewLogEventsParams()
 
 	params.Limit = 1000
 
+	timeParser := parser.NewTimeTextParser(time.Now())
+	v, err := timeParser.Parse(c.StartTime)
+	if err != nil {
+		return params, err
+	}
+	params.StartTime = v
+
+	v, err = timeParser.Parse(c.EndTime)
+	if err != nil {
+		return params, err
+	}
+	params.EndTime = v
+
 	params.LogGroupName = c.Args.LogGroupName
 	params.LogStreamName = c.Args.LogStreamName
 
-	return params
+	return params, nil
 }
 
 func (c *Command) Execute(args []string) error {
 	service := awslogs.NewAwsLogs()
 
-	if len(c.StartTime) > 0 || len(c.EndTime) > 0 {
-		timeParser := parser.NewTimeTextParser(time.Now())
-		timeParser.Parse(c.StartTime)
-		timeParser.Parse(c.EndTime)
-		return errors.New("finish")
+	params, err := c.requestParams()
+	if err != nil {
+		return err
 	}
 
-	err := service.LogEvents(c.requestParams(), func(logEvent *cloudwatchlogs.OutputLogEvent, lastEntry bool) bool {
+	err = service.LogEvents(params, func(logEvent *cloudwatchlogs.OutputLogEvent, lastEntry bool) bool {
 		fmt.Println(*logEvent.Message)
 		return !lastEntry
 	})
